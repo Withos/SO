@@ -24,7 +24,6 @@ int *pam;
 
 void waitSemafor(int semID, int number)
 {
-	printf("semID (prod)= %d\n", semID);
 	struct sembuf operacje[1];
 	operacje[0].sem_num = number;
 	operacje[0].sem_op = -1;
@@ -52,28 +51,25 @@ void signalSemafor(int semID, int number)
 
 int main()
 {
-   key_t klucz, kluczshm, kluczsem;
-   int msgID;
-   int shmID, semID;
-   int i; // to, co ma trafic do bufora 
-   time_t czas;   
+   key_t kluczkk, kluczshm, kluczsem;
+   int shmID, semID, msgID;
+   pid_t i; // to, co ma trafic do bufora 
    struct bufor komunikat;
-   pid_t pidNr;
 
-printf("producent--------------------------------\n");
+printf("\nproducent--------------------------------\n");
 
 //uzyskanie dostepu do kolejki komunikatow
-if ( (klucz = ftok("/lib/firmware/yamaha", 1)) == -1 )
+if ( (kluczkk = ftok(".", 1)) == -1 )
 {
 	printf("Blad ftok (prod)\n");
 	exit(1);
 }
-msgID=msgget(klucz,IPC_CREAT|0666); //tworzenie kk
+msgID=msgget(kluczkk,IPC_CREAT|0666); //tworzenie kk
 if (msgID==-1)
 	{printf("blad kolejki komunikatow (prod)\n"); exit(1);}
 
 //uzyskanie dostepu do pamieci dzielonej
-if ( (kluczshm=ftok("/lib/firmware/yamaha",2)) == -1 )
+if ( (kluczshm=ftok(".",2)) == -1 )
 {
 	printf("Blad ftok (prod)\n");
 	exit(1);
@@ -84,7 +80,7 @@ shmID=shmget(kluczshm, MAX2*sizeof(int), IPC_CREAT|0666);//tworzenie pam. dz.
 pam = (int*)shmat(shmID, NULL, 0);
 
 //Uzyskanie dostepu do semaforow
-if ( (kluczsem=ftok("/lib/firmware/yamaha",3)) == -1 )
+if ( (kluczsem=ftok(".",3)) == -1 )
 {
 	printf("Blad ftok (prod)\n");
 	exit(1);
@@ -102,9 +98,9 @@ msgrcv(msgID, &komunikat, sizeof(komunikat.mvalue), PUSTY, 0);
 waitSemafor(semID, 0);
 	
 //produkcja - dodanie rekordu do puli buforow  pod indeks - zapis  -- getpid()
-pidNr=getpid();
-pam[zapis] = pidNr;
-printf("PRODUCENT pam[%d]: %d\n", zapis, pam[zapis]);
+i=getpid();
+pam[zapis] = i;
+printf("PROD pam[%d]= %d\n", zapis, pam[zapis]);
 signalSemafor(semID, 0);
 
 //wyslanie odpowiedniego komunikatu

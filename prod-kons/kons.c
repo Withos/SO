@@ -24,7 +24,6 @@ int *pam;
 
 void waitSemafor(int semID, int number)
 {
-	printf("semID (kons)= %d\n", semID);
 	struct sembuf operacje[1];
 	operacje[0].sem_num = number;
 	operacje[0].sem_op = -1;
@@ -52,39 +51,37 @@ void signalSemafor(int semID, int number)
 
 int main()
 {
-   key_t klucz, kluczshm, kluczsem;
+   key_t kluczkk, kluczshm, kluczsem;
    int msgID, shmID, semID;
-   int i;
+   pid_t i;
    struct bufor komunikat;
 
-   printf("konsument--------------------------------\n");
-
+   printf("\nkonsument--------------------------------\n");
 
 //uzyskanie dosepu do kolejki komunikatow
-if ( (klucz = ftok("/lib/firmware/yamaha", 1)) == -1 )
+if ( (kluczkk = ftok(".", 1)) == -1 )
 {
 	printf("Blad ftok (kons)\n");
 	exit(1);
 }
-msgID=msgget(klucz,IPC_CREAT|0666); //tworzenie kk
+msgID=msgget(kluczkk,IPC_CREAT|0666); //tworzenie kk
 if (msgID==-1)
 	{printf("blad kolejki komunikatow\n"); exit(1);}
  
 //uzyskanie dosepu do pamieci dzielonej
-kluczshm=ftok("/lib/firmware/yamaha",2);
+kluczshm=ftok(".",2);
 shmID=shmget(kluczshm, MAX2*sizeof(int), IPC_CREAT|0666);//tworzenie pam. dz.
 
 //przylaczenie pam. dzielonej-- shmat   
 pam = (int*)shmat(shmID, NULL, 0);
 
 //Uzyskanie dostepu do semaforow
-if ( (kluczsem=ftok("/lib/firmware/yamaha",3)) == -1 )
+if ( (kluczsem=ftok(".",3)) == -1 )
 {
 	printf("Blad ftok (prod)\n");
 	exit(1);
 }
 
-printf ("kluczsem kons= %d\n", kluczsem);
 
 if ( (semID = semget(kluczsem, 1, 0666)) == -1)
 {
@@ -96,13 +93,13 @@ if ( (semID = semget(kluczsem, 1, 0666)) == -1)
 //msgrcv -- odbiór komunikatu 
 //odbieranie/wysylanie odpowiednich komunikatow +
 msgrcv(msgID, &komunikat, sizeof(komunikat.mvalue), PELNY, 0);
-printf("KONSUMENT odebrano: %d\n", komunikat.mtype);
 
 //sekcja krytyczna -- semafor -- operacje na pamięci dzielonej
 waitSemafor(semID, 0);
 
 // odczyt z bufora  elementu o  indeksie odczyt (pam. dzielona)
-printf("KONSUMENT pam[%d]: %d\n", odczyt, pam[odczyt]);
+i=pam[odczyt];
+printf("KONS pam[%d]= %d\n", odczyt, i);
 signalSemafor(semID, 0);
 
 komunikat.mtype=PUSTY;

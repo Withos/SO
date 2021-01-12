@@ -9,7 +9,7 @@
 #include <sys/wait.h>
 
 
-#define P 10   // liczba procesow prod i kons
+#define P 50   // liczba procesow prod i kons
 #define MAX 10  //rozmiar buforu
 #define MAX2 12 // + dwa pola na indeksy zapis/odczyt
 #define PUSTY 1 //typ komunikatu
@@ -23,7 +23,7 @@ struct bufor{
 
 int main()
 {
-   key_t klucz, kluczshm, kluczsem;  //klucze do kk i pam. dz.
+   key_t kluczkk, kluczshm, kluczsem;  //klucze do kk i pam. dz.
    int msgID; //id kolejki kom.
    int shmID;	//id pamieci dzielonej
    int semID; //id zbioru semaforow
@@ -31,18 +31,18 @@ int main()
    int i;
    struct bufor komunikat;
    
-   if ( (klucz = ftok("/lib/firmware/yamaha", 1)) == -1 )
+   if ( (kluczkk = ftok(".", 1)) == -1 )
    {
       printf("Blad ftok (main)\n");
       exit(1);
    }
    
 
-   msgID=msgget(klucz,IPC_CREAT | 0666); //tworzenie kk
+   msgID=msgget(kluczkk,IPC_CREAT | 0666); //tworzenie kk
    if (msgID==-1)
 	{printf("blad kolejki komunikatow\n"); exit(1);}
 
-   kluczsem=ftok("/lib/firmware/yamaha",3);
+   kluczsem=ftok(".",3);
    semID= semget(kluczsem, 1, IPC_CREAT | 0666);
    if ( semID == -1)
    {
@@ -57,7 +57,7 @@ int main()
 
    
 
-   kluczshm=ftok("/lib/firmware/yamaha",2);
+   kluczshm=ftok(".",2);
    shmID=shmget(kluczshm, MAX2*sizeof(int), IPC_CREAT | 0666);//tworzenie pam. dz.
 
    komunikat.mtype=PUSTY;
